@@ -1,9 +1,4 @@
----
-title: "Untitled"
-author: "侯易"
-date: "2024-11-13"
-output: html_document
----
+
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)

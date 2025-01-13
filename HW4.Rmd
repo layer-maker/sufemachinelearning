@@ -1,0 +1,309 @@
+---
+title: "Untitled"
+author: "侯易"
+date: "2024-12-11"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+练习一
+1创建一个n=20,d=2的分组样本，其中第一组中x∼N(1,I)，第二组中x∼N(0,I)。
+```{r}
+library(e1071)  
+
+set.seed(1)  
+
+n <- 20  
+d <- 2  
+
+
+group1 <- matrix(rnorm(40, mean = 1), ncol = d)  
+group2 <- matrix(rnorm(40, mean = 0), ncol = d)  
+
+data <- rbind(group1, group2)  
+labels <- factor(c(rep(1, n), rep(2, n)))  
+training_data <- data.frame(x1 = data[, 1], x2 = data[, 2], label = labels) 
+```
+
+
+
+
+2.使用R中e1071库的svm()函数，对线性核参数和cost=10拟合支持向量分类器，绘制出所得的支持向量分类器
+```{r}
+
+
+model1 <- svm(label ~ ., data = training_data, kernel = "linear", cost = 10)  
+
+plot(model1, training_data)  
+  
+```
+
+
+3.对线性核参数和cost = 0.1拟合支持向量分类器，绘制出所得的支持向量分类器。
+```{r}
+model2 <- svm(label ~ ., data = training_data, kernel = "linear", cost = 0.1)  
+
+plot(model2, training_data)  
+ 
+```
+
+
+4.使用e1071库包含一个内置函数tune()，用于执行交叉验证寻找最优的cost
+```{r}
+tune_result <- tune(svm, label ~ ., data = training_data,  
+                    ranges = list(cost = c(0.001, 0.01, 0.1, 1, 10, 100)),  
+                    kernel = "linear")  
+
+best_model <- tune_result$best.model  
+summary(best_model)
+```
+最佳cost为0.1
+
+
+
+
+5.生成一个n=20的测试数据集，使用predict()函数预测最佳模型下的测试观测值的分类。
+```{r}
+test_data <- matrix(rnorm(20 * d, mean = 0.5), ncol = d)  
+colnames(test_data) <- c("x1", "x2")  
+test_df <- data.frame(x1 = test_data[, 1], x2 = test_data[, 2])  
+
+predictions <- predict(best_model, newdata = test_df)  
+
+print(predictions)  
+```
+
+练习二
+1.创建一个n=200,d=2的分组样本，其中第一组中有150个样本，第一组中前100个x∼N(2,I)，后50个x∼N(−2,I），第二组中x∼N(0,I)。
+```{r}
+set.seed(1)  
+
+  
+n <- 200 
+d <- 2   
+
+
+group1_part1 <- matrix(rnorm(200, mean = 2), ncol = d)  
+group1_part2 <- matrix(rnorm(100, mean = -2), ncol = d)  
+group1 <- rbind(group1_part1, group1_part2)  
+
+
+group2 <- matrix(rnorm(100), ncol = d)  
+
+data <- rbind(group1, group2)  
+labels <- factor(c(rep(1, 150), rep(2, 50)))  
+data_frame <- data.frame(x1 = data[, 1], x2 = data[, 2], label = labels) 
+
+```
+
+
+
+
+
+2.将数据随机分为n=100的训练集和n=100的测试集，在测试集上对参数为γ=1的高斯核函数和cost=1拟合支持向量分类器，绘制出所得的支持向量分类器。
+```{r}
+set.seed(1) 
+train_indices <- sample(1:nrow(data_frame), size = 100)  
+train_data <- data_frame[train_indices, ]  
+test_data <- data_frame[-train_indices, ]  
+svm_model <- svm(label ~ ., data = train_data, kernel = "radial", cost = 1, gamma = 1)  
+
+
+plot(svm_model, train_data)  
+
+```
+
+
+
+3.使用tune()来执行交叉验证，选择一个最优的SVM的γ和cost，使用predict()函数来查看此模型的测试集预测
+```{r}
+tune_result <- tune(svm, label ~ ., data = train_data,ranges = list(cost = c(0.1, 1, 10), gamma = c(0.01, 0.1, 1, 10)))  
+
+
+best_model <- tune_result$best.model  
+summary(best_model)
+```
+
+```{r}
+predictions <- predict(best_model, newdata = test_data) 
+predictions
+```
+
+练习三
+1.创建一个训练集，其包含800个随机样本，再创建一个包含剩余观测值的测试集。
+```{r}
+library(ISLR2)  
+library(tree)
+data(OJ)  
+
+ 
+set.seed(1)  
+
+ 
+train_indices <- sample(1:nrow(OJ), 800)  
+train_set <- OJ[train_indices, ]  
+test_set <- OJ[-train_indices, ]  
+```
+
+
+2.使用训练集的数据拟合一个树，以Purchase作为响应变量，其他变量作为预测变量。使用summary()函数来获取关于这个树的信息，并描述所得到的结果。在训练集上错误率是多少?这个树有多少终端节点?
+```{r}
+tree_model <- tree(Purchase ~ ., data = train_set)  
+
+ 
+summary(tree_model) 
+num_terminal_nodes <- length(unique(tree_model$frame$var[tree_model$frame$var == "<leaf>"]))  
+num_terminal_nodes 
+```
+错误率：0.1588；有9个终端节点
+
+
+3.输入该树对象的名称并运行，以获取关于这个树的详细情况。选择其中一个终端节点，并解释所显示的内容
+```{r}
+train_pred <- predict(tree_model, train_set, type = "class")  
+
+train_error_rate <- mean(train_pred != train_set$Purchase)  
+train_error_rate  
+
+num_terminal_nodes <- length(unique(tree_model$frame$var[tree_model$frame$var == "<leaf>"]))  
+num_terminal_nodes 
+
+tree_model
+```
+
+在节点 21 中，对于那些 SpecialCH值大于0.5的消费者，有0.4的概率被分类为”ch”，在子集中的样本量是15.节点的偏差为20.19，具有良好的分类表现。
+
+
+4.绘制该树的图像，并解释结果。
+```{r}
+plot(tree_model)  
+text(tree_model, pretty = 0)
+```
+初始节点:LoyalCH < 0.5036
+样本数量: 800
+样本分布：CH 、MM
+满足这一条件继续分类
+
+第一次分裂：
+左侧: LoyalCH < 0.280875
+右侧: LoyalCH > 0.5036
+
+第二次分裂（左侧）:
+LoyalCH < 0.280875
+
+第三次分裂
+LoyalCH < 0.0356415 分类为 MM
+
+PriceDiff < 0.05
+
+第四次分裂
+SpecialCH < 0.5 分类为 MM
+SpecialCH > 0.5 分类为 CH
+
+
+第二层分裂（右侧）:
+
+第二次分裂
+LoyalCH > 0.764572 分类为 CH
+LoyalCH < 0.764572
+
+第三次分裂
+ListPriceDiff > 0.235 分类为CH
+ListPriceDiff < 0.235 
+
+第四次分裂
+PctDiscMM < 0.196196 分类为 CH
+PctDiscMM > 0.196196 分类为 MM
+
+
+
+5.对测试集做预测，并生成一个混淆矩阵，比较测试集的真实标签和所预测的标签。在测试集上的错误率是多少?
+```{r}
+test_pred <- predict(tree_model, test_set, type = "class")  
+
+confusion_matrix <- table(test_set$Purchase, test_pred)  
+confusion_matrix  
+
+test_error_rate <- mean(test_pred != test_set$Purchase)  
+test_error_rate  
+```
+
+错误率是：0.1703704
+
+6.对训练集使用cv.tree()函数，以确定最优树的大小。
+7.生成一个图像，其横轴代表树的大小，纵轴为交叉验证的分类错误率。
+8.哪个大小的树对应最低的交叉验证分类误差率?
+```{r}
+cv_result <- cv.tree(tree_model, FUN = prune.tree)  
+cv_result
+ 
+plot(cv_result$size, cv_result$dev, type="b", xlab = "Tree Size", ylab = "Cross-Validation Error")  
+
+optimal_size <- cv_result$size[which.min(cv_result$dev)]  
+optimal_size  
+```
+最优大小树为9
+
+
+9.生成一个剪枝后的树，其大小为交叉验证中获得的最优大小。如果交叉验证的结果显示无需进行剪枝，则生成一个有五个终端节点的剪枝后的树。
+```{r}
+pruned_tree <- prune.misclass(tree_model, best = 5)  
+
+ 
+```
+
+
+10.比较剪枝的树和未剪枝的树在集上的错误率。哪个更高?
+```{r}
+train_pred_unpruned <- predict(tree_model, train_set, type = "class")  
+train_error_rate_unpruned <- mean(train_pred_unpruned != train_set$Purchase)  
+
+train_pred_pruned <- predict(pruned_tree, train_set, type = "class")  
+train_error_rate_pruned <- mean(train_pred_pruned != train_set$Purchase)  
+
+test_pred_unpruned <- predict(tree_model, test_set, type = "class")  
+test_error_rate_unpruned <- mean(test_pred_unpruned != test_set$Purchase)  
+
+test_pred_pruned <- predict(pruned_tree, test_set, type = "class")  
+test_error_rate_pruned <- mean(test_pred_pruned != test_set$Purchase) 
+
+train_error_rate_unpruned
+train_error_rate_pruned
+test_error_rate_unpruned
+test_error_rate_pruned
+
+```
+训练集未剪枝错误率: 0.15875 
+训练集剪枝错误率: 0.1625 
+剪枝后更高
+
+测试集未剪枝错误率: 0.1703704 
+测试集剪枝错误率: 0.162963 
+剪枝前更高
+
+
+
+

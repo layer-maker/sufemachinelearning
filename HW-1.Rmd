@@ -1,0 +1,313 @@
+---
+title: "Untitled"
+author: "侯易"
+date: "2024-09-20"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+install.packages("prettydoc") library(prettydoc)
+
+# 教育背景 *上海财经大学统计学院*
+
+# 研究兴趣 *机器学习*
+
+# 实习经历 *1. 华兴证券机构业务部* *2. 国投证券行研*
+
+| 教育背景             | 研究兴趣 | 实习经历             |
+|----------------------|----------|----------------------|
+| 上海财经大学统计学院 | 机器学习 | 1.华兴证券机构业务部 |
+|                      |          | 2.国投证券行研       |
+
+install.packages('praise')
+
+remove.packages("yaml") install.packages("yaml")
+
+练习二
+
+2.1 使用rep()函数创造向量 1,1,1,1,1,2,2,2,2,2 并将其命名为 x1。 使用rep()函数创造向量 1,2,1,2,1,2,1,2,1,2 并将其命名为 x2。 找到两种方法来计算 x.row 的每一列的总和。
+
+```{r}
+x1 <- c(rep(1,5),rep(2,5))
+x1
+x2 <- rep(c(1,2),5)
+x2
+```
+
+2.2 将 x1 和 x2 按列组合成矩阵 x.col，即 x1 和 x2 是 x 的两列。
+
+将 x1 和 x2 按行组合成矩阵 x.row，即 x1 和 x2 是 x 的两行。
+
+找到两种方法来计算 x.row 的每一列的总和。
+
+```{r}
+x.col <- cbind(x1,x2)
+x.row <- rbind(x1,x2)
+x.sum1 <- colSums(x.row)
+x.sum1
+x.sum2 <- apply ( x.row,2,sum )
+x.sum2
+```
+
+2.3 将1,2,..., 20 构成两个4\*5的矩阵，其中矩阵A是按列输入，矩阵B是按行输入，并基于A和B生成如下矩阵C-H并输出:
+
+(1)C=A+B；
+
+(2)D=AB\^T (矩阵相乘:A乘以B的转置矩阵,提示：转置矩阵用t()函数)；
+
+```{r}
+A <- matrix(data = 1:20, nrow = 4, ncol = 5)
+A
+B <- matrix(data = 1:20, nrow = 4, ncol = 5,byrow=TRUE)
+B
+c <- A+B
+c
+D <- A%*%t(B)
+D
+```
+
+2.4 (3)E：第一列全为1，后面几列等于A矩阵；
+
+(4)F1由A的前3行和前3列构成；(思考：为什么命名为F1而不是F?)
+
+```{r}
+E1 <- rep(1,4)
+E2 <- A[,2:5]
+E <- cbind(E1,E2)
+E
+
+F1 <- list(A[1:3,],A[,1:3])
+F1
+```
+
+2.5 (5)G是由矩阵B去除第3列构成的矩阵; (6)H是与A具有相同对角元素的对角阵。（提示：使用diag()函数）
+
+```{r}
+G <- B[,-3]
+G
+H1 <- diag(A)
+H <- diag(H1)
+H
+```
+
+练习3
+
+3.1 创建一个名为 func() 的函数，该函数有一个名为 lst 的参数。
+
+该函数应该创建一个新的空向量，并添加 lst 中具有奇数索引的每个元素。然后该函数应该返回这个新向量。 例如，func(c(4, 3, 7, 10, 11, -2)) 应返回向量 c(4, 7, 11)。
+```{r}
+func <- function(lst)
+  {
+  lst[seq(1,length(lst),2)]
+}
+func(A)
+func(c(4, 3, 7, 10, 11, -2))
+```
+
+3.2 (1). 按下列要求生成R函数： 函数名：takeCI； 输入: (1)数值型向量x，表示某正态样本的取值. 输出: 基于该样本得到的均值参数的置信度为95%的置信区间，以一个长度为2的向量输出。(提示：可用mean(),sd()函数)
+
+(2). 从均值为10，标准差为1的正态分布中随机生成样本量n=20的一个样本$x$。基于此样本，用(1)中函数计算均值参数的95%置信区间并输出
+
+```{r}
+takeCI <- function(x)
+{
+  y <- c(mean(x)-1.96*sd(x)/ sqrt(length(x)),mean(x)+1.96*sd(x)/ sqrt(length(x)))
+  return(y)
+}
+```
+
+```{r}
+A <- rnorm(20,10,1)
+
+takeCI(A)
+```
+
+install.packages("ISLR2") library(ISLR2)
+
+练习4
+
+4.1 该数据集中有多少行？ 多少列？ 行和列代表什么？ 哪些变量是定量的，哪些是定性的？ 每个定量预测变量的范围是多少？可以使用range()函数来回答这个问题。 为该数据集中的变量（列）制作一些成对散点图。描述你的发现。
+
+```{r}
+library(ISLR2)
+attach(Boston)
+
+dim(Boston)
+
+str(Boston)
+head(Boston)
+
+range(crim)
+range(zn)
+range(indus)
+range(chas)
+range(nox)
+range(rm)
+range(age)
+range(dis)
+range(rad)
+range(tax)
+range(ptratio)
+range(lstat)
+range(medv)
+```
+
+数据有506行，13列 指标解释: CRIM犯罪率 ZN住宅用地所占比例 INDUS城镇中非住宅用地所占比例 CHAS是否被穿过查尔斯河 NOX氮氧化污染物 RM每栋住宅的房间数 AGE1940年以前建成的自住单位的比例 DIS距离5个波士顿的就业中心的加权距离 RAD距离高速公路的便利指数 TAX每一万美元的不动产税率 PRTATIO城镇中的教师学生比例 LSTAT低收入群比例 MEDV自住房屋的中位数价值（1000 美元）
+
+CHAS是定性的,其余为定量变量
+
+4.2 为该数据集中的变量（列）制作一些成对散点图。描述你的发现。
+
+```{r}
+pairs(~crim + zn +indus+chas+nox+rm+age+dis+rad+tax+ptratio+lstat+medv, data = Boston)
+```
+
+DIS和NOX呈现负相关，越离就业中心越不便利，氮氧化合物浓度越高 LSTAT和MEDV呈现负相关，低收入人群越多，房价越低
+
+4.3 是否有任何与人均犯罪率相关的预测因素？ 如果是，请解释这种关系。 install.packages("corrplot") library(corrplot)
+
+```{r}
+library(corrplot)
+B <- cor(Boston)
+B
+corrplot(B,order="hclust",addrect = 2)
+```
+
+犯罪率和RAD与TAX高度相关
+
+4.4 每个定量预测变量的均值和标准差是多少？
+
+```{r}
+summary(Boston)
+sd(crim)
+sd(zn)
+sd(indus)
+sd(nox)
+sd(rm)
+sd(age)
+sd(dis)
+sd(rad)
+sd(tax)
+sd(ptratio)
+sd(lstat)
+sd(medv)
+
+```
+
+4.5 该数据集中有多少人口普查区域位于查尔斯河沿岸？
+
+```{r}
+n <- 0
+for(i in 1:506)
+{
+  if(chas[i]==1)
+  {
+    n <- n+1
+  }
+}
+n
+```
+
+所以有35个区域被查尔斯河穿过
+
+4.6 该数据集中各城镇的师生比中位数是多少？
+
+```{r}
+median(ptratio) 
+```
+
+师生比中位数为19.05
+
+4.7 波士顿哪个人口普查区的自住房屋中位数最低？该人口普查区域的其他预测变量的值是多少，这些值与这些预测变量的总体范围相比如何？ 描述你的发现。
+
+```{r}
+min(medv)
+for(i in 1:506)
+{
+  if(medv[i]==min(medv))
+  {
+    print(Boston[i,])
+  }
+}
+```
+
+比较起来正面指标都比较低，负面指标较高
+
+4.8 在此数据集中，有多少人口普查区平均每户住宅超过七个房间？ 每个住宅超过八个房间？ 评论每个住宅平均超过八个房间的人口普查区。
+
+```{r}
+  q <- 0
+for(i in 1:506)
+{
+  if(rm[i]>7)
+  {
+    q <- q+1
+    print(Boston[i,])
+  }
+}
+q
+```
+
+```{r}
+b <- 0
+for(i in 1:506)
+{
+  if(rm[i]>8)
+  {
+    b <- b+1
+    print(Boston[i,])
+  }
+}
+b
+```
+
+分别有64个和13个区域满足要求 普遍medv都很高
+
+98 crim、zn、tax、lstat较低，medv较高，ptratio平均
+
+164 crim、lstat较低，不位于查尔斯河沿岸，age、medv较高
+
+205 不位于查尔斯河沿岸，zn、dis、medv较高
+
+225 medv较高
+
+226 不位于查尔斯河沿岸，age、medv较高
+
+227 lstat较低，age、medv较高,dis、ptratio平均
+
+233 medv较高,age、dis平均 
+
+234 medv较高
+
+254 nox、rad、age、tax、较低，不位于查尔斯河沿岸，zn、medv较高
+
+258 zn、medv较高
+
+263 不位于查尔斯河沿岸，zn、nox、medv较高
+
+268 ptratio、lstat较低，zn、medv较高,nox、age平均
+
+365 zn、dis、lstat较低，位于查尔斯河沿岸，tax、ptratio、medv较高

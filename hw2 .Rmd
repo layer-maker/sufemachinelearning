@@ -1,11 +1,4 @@
----
-title: "2022111939 侯易 第二次作业"
-author: "侯易"
-date: "2024-10-28"
-output:
-  html_document: default
-  pdf_document: default
----
+
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)

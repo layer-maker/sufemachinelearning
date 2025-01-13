@@ -1,0 +1,170 @@
+---
+title: "Untitled"
+author: "侯易"
+date: "2024-11-13"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+1.选取MajorAxisLength和MinorAxisLength两个特征和前3349组数据，绘制散点图
+```{r}
+library(MASS)  
+library(pROC)  
+library(klaR)
+library(e1071)
+set.seed(2024)
+df <- read.csv("C:/Users/42840/Desktop/Dry_Bean_Dataset.csv") 
+data1select <- df[1:3349, c("MajorAxisLength", "MinorAxisLength")] 
+plot(data1select$MajorAxisLength,data1select$MinorAxisLength)
+```
+
+
+2.使用随机数set.seed(2024)构造一个包含0.7n个样本的训练集和一个包含0.3n个样本的测试集，通过MASS包中的lda()函数拟合LDA
+```{r}
+set.seed(2024)
+
+
+data1select <- df[1:3349, c("MajorAxisLength", "MinorAxisLength", "Class")]
+data1select$Class <- as.factor(data1select$Class)  
+set.seed(2024)
+train_indices <- sample(1:nrow(data1select), 0.7 * nrow(data1select))
+trainset <- data1select[train_indices, ]
+testset <- data1select[-train_indices, ]
+
+ldafit <- lda(Class ~ MajorAxisLength + MinorAxisLength,trainset) 
+summary(ldafit)
+```
+
+
+
+3.通过predict()函数计算LDA在测试集上的混淆矩阵和整体准确率
+```{r}
+prediction1 <- predict(ldafit, newdata = testset)  
+  
+table(testset$Class, prediction1$class)
+
+hxmatrix <- table(testset$Class, prediction1$class)  
+
+zql <- sum(diag(hxmatrix) / sum(hxmatrix)) 
+
+zql
+```
+
+4.通过pROC包中的roc()函数绘制LDA在测试集上的ROC曲线并计算AUC
+```{r}
+roclda <- roc(testset$Class, as.numeric(prediction1$class))  
+plot(roclda, col=9, main="LDA", print.auc=TRUE)  
+```
+
+5.通过klaR包中的partimat()函数绘制LDA的分类边界
+```{r}
+  
+partimat(Class ~ MajorAxisLength + MinorAxisLength, data = trainset, method = "lda")
+```
+
+6.通过MASS包中的qda()函数拟合QDA，并重复3-5中的工作（总图见后文8.2）
+```{r}
+qdafit <- qda(Class ~ MajorAxisLength + MinorAxisLength, data = trainset)  
+prediction2 <- predict(qdafit, newdata = testset) 
+table(testset$Class, prediction2$class)
+
+hxmatrix2 <- table(testset$Class, prediction2$class)  
+
+zql2 <- sum(diag(hxmatrix2) / sum(hxmatrix2)) 
+
+zql2
+
+rocqda <- roc(testset$Class, as.numeric(prediction2$class))  
+plot(rocqda, col=12, main="QDA", print.auc=TRUE)
+
+
+```
+
+7.通过e1071包中的naiveBayes()函数拟合朴素贝叶斯，并重复3-5中的工作（总图见后文8.2）
+```{r}
+nfit <- naiveBayes(Class ~ MajorAxisLength + MinorAxisLength, data = trainset)  
+prediction3 <- predict(nfit, newdata = testset, type = "class")  
+table(testset$Class, prediction3)
+matrix3 <- table(testset$Class, prediction3)  
+nzql <- sum(diag(matrix3)) / sum(matrix3)  
+nzql
+
+npred <- predict(nfit, newdata = testset, type = "raw")  
+rocn <- roc(testset$Class, as.numeric(npred[,2])) 
+
+plot(rocn, col=5, main="naiveBayes", print.auc=TRUE)
+```
+
+
+8.通过glm()函数拟合逻辑回归并重复3-5中的工作
+```{r}
+glmfit <- glm(Class ~ MajorAxisLength + MinorAxisLength, family = binomial, data = trainset)
+
+prediction4 <- predict(glmfit, newdata = testset)
+
+table(testset$Class, prediction4 > 0.5)
+matrix4 <- table(testset$Class, prediction4 > 0.5)
+
+glmzql <- sum(diag(matrix4)) / sum(matrix4)
+glmzql
+
+rocglm <- roc(testset$Class,prediction4)
+
+plot(rocglm, col=3, main="GLM", print.auc=TRUE)
+```
+
+
+8.2将LDA，QDA，朴素贝叶斯与逻辑回归的ROC曲线绘制在同一张图中并比较
+```{r}
+plot(roclda, col = 1)
+lines(rocqda, col = 2)
+lines(rocn, col = 3)
+lines(rocglm, col = 4)
+legend("bottomright", legend = c("LDA", "QDA", "NaiveBayes", "Regression"),
+       col = c(1, 2, 3, 4), lwd = 2)
+```
+
+9.编写梯度下降算法来实现逻辑回归，将结果与glm()函数拟合的结果比较
+```{r}
+descent <- function(X, y, lr = 0.01, max_iter = 1000) {
+  X <- as.matrix(cbind(1, X)) 
+  y <- as.matrix(y)
+  theta <- matrix(0, nrow = ncol(X), ncol = 1)
+  for (i in 1:max_iter) {
+    predictions <- 1 / (1 + exp(-X %*% theta))
+    errors <- y - predictions
+    theta <- theta + lr * t(X) %*% errors
+  }
+  return(theta)
+}
+trainX <- trainset[, c("MajorAxisLength", "MinorAxisLength")]
+trainy <- ifelse(trainset$Class == levels(trainset$Class)[1], 1, 0) 
+gd_theta <- descent(trainX, trainy)
+print(gd_theta)
+
+print(coef(glmfit))
+```
+
